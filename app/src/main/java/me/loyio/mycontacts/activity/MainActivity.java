@@ -111,9 +111,11 @@ public class MainActivity extends AppCompatActivity {
                         TextView nameTv = view.findViewById(R.id.nameTv_datalist);
                         TextView phoneTv = view.findViewById(R.id.phoneTv_datalist);
                         TextView emailTv = view.findViewById(R.id.emailTv_datalist);
+                        TextView qqTv = view.findViewById(R.id.qqTv_datalist);
                         nameTv.setText(cursor.getString(1));
                         phoneTv.setText(cursor.getString(2));
                         emailTv.setText(cursor.getString(3));
+                        qqTv.setText(cursor.getString(4));
 
 
                     }

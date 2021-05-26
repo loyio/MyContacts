@@ -51,10 +51,10 @@ public class ExportContactActivity extends AppCompatActivity {
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        menu.setHeaderTitle("导入联系人操作");
-        menu.add(0, Menu.FIRST,0,"全选");
-        menu.add(0, Menu.FIRST+1,1,"全不选");
-        menu.add(0, Menu.FIRST+2,1,"导入");
+        menu.setHeaderTitle("导出联系人操作");
+        menu.add(0, Menu.FIRST,0,"全部选择");
+        menu.add(0, Menu.FIRST+1,1,"取消选择");
+        menu.add(0, Menu.FIRST+2,1,"确认导出");
     }
     @Override
     public boolean onContextItemSelected(MenuItem item) {
@@ -62,8 +62,6 @@ public class ExportContactActivity extends AppCompatActivity {
             case Menu.FIRST:selectAll();break;
             case Menu.FIRST+1:unSelectAll();break;
             case Menu.FIRST+2:exportContact();break;
-
-
         }
         return super.onContextItemSelected(item);
     }
@@ -72,29 +70,6 @@ public class ExportContactActivity extends AppCompatActivity {
         ThreadUtils.runInThread(new Runnable() {
             @Override
             public void run() {
-//                int count = 0;
-//                for (Contact contact : mContactList) {
-//                    if (contact.getChecked() == true) {
-//                        Cursor cursor = getContentResolver().query(ContactProvider.URI_CONTACT,
-//                                null,
-//                                "",
-//                                new String[]{contact.getName()},
-//                                null);
-//                        if (!cursor.moveToNext()) {
-//                            ContentValues cv = new ContentValues();
-//                            cv.put(ContactOpenHelper.ContactTable.NAME, contact.getName());
-//                            cv.put(ContactOpenHelper.ContactTable.PHONE, contact.getPhone());
-//                            cv.put(ContactOpenHelper.ContactTable.EMAIL, contact.getEmail());
-//                            cv.put(ContactOpenHelper.ContactTable.QQ, "");
-//                            getContentResolver().insert(uri, cv);
-//                            count++;
-//                        } else ToastUtils.showToastSafe(ExportContactActivity.this, "该联系人已存在！");
-//                        cursor.close();
-//                    }
-//                }
-//                ToastUtils.showToastSafe(ExportContactActivity.this, "已导入" + count + "个联系人！");
-//                finish();
-//
                 for (Contact contact : mContactList) {
                     if (contact.getChecked()==true) {
                         Cursor cursor = getContentResolver().query(ContactProvider.URI_CONTACT,
@@ -172,8 +147,16 @@ public class ExportContactActivity extends AppCompatActivity {
     }
 
     private void unSelectAll() {
-
-
+        for (Contact contact:mContactList) {
+            contact.setChecked(false);
+        }
+        ThreadUtils.runInUIThread(new Runnable() {
+            @Override
+            public void run(){
+                mmMyAdapter=new MyAdapter(ExportContactActivity.this,mContactList);
+                mExportLv.setAdapter(mmMyAdapter);
+            }
+        });
     }
 
     private void initDate() {

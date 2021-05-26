@@ -42,9 +42,9 @@ public class ImportContactActivity extends AppCompatActivity {
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         menu.setHeaderTitle("导入联系人操作");
-        menu.add(0, Menu.FIRST,0,"全选");
-        menu.add(0, Menu.FIRST+1,1,"全不选");
-        menu.add(0, Menu.FIRST+2,1,"导入");
+        menu.add(0, Menu.FIRST,0,"全部选择");
+        menu.add(0, Menu.FIRST+1,1,"取消选择");
+        menu.add(0, Menu.FIRST+2,1,"确定导入");
     }
 
     @Override

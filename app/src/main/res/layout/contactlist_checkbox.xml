@@ -6,13 +6,13 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="10dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/personimg" />
+        app:srcCompat="@drawable/avater" />
 
     <TextView
         android:id="@+id/textView5"
@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_marginRight="16dp"
         android:focusable="false"
-        app:layout_constraintBaseline_toBaselineOf="@+id/importNameTv"
+        app:layout_constraintBaseline_toBaselineOf="@+id/importPhoneTv"
         app:layout_constraintRight_toRightOf="parent" />
 
     <TextView

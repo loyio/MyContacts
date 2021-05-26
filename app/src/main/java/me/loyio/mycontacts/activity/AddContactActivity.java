@@ -28,13 +28,6 @@ public class AddContactActivity extends AppCompatActivity {
         myAddEmail=findViewById(R.id.addEmailEt);
         myAddQq=findViewById(R.id.addQqEt);
         myAddBtn=findViewById(R.id.addContactBtn);
-        myBackBtn=findViewById(R.id.title_back);
-        myBackBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
         myAddBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

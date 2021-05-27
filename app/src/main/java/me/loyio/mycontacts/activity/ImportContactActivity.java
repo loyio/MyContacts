@@ -88,7 +88,7 @@ public class ImportContactActivity extends AppCompatActivity {
                             cv.put(ContactOpenHelper.ContactTable.NAME,contact.getName());
                             cv.put(ContactOpenHelper.ContactTable.PHONE,contact.getPhone());
                             cv.put(ContactOpenHelper.ContactTable.EMAIL,contact.getEmail());
-                            cv.put(ContactOpenHelper.ContactTable.QQ,"");
+                            cv.put(ContactOpenHelper.ContactTable.QQ,contact.getQq());
                             getContentResolver().insert(ContactProvider.URI_CONTACT,cv);
                             count++;
                         }else ToastUtils.showToastSafe(ImportContactActivity.this,"该联系人已存在！");

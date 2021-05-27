@@ -80,7 +80,6 @@ public class ExportContactActivity extends AppCompatActivity {
                         while (cursor.moveToNext()) {
                             L.d("woshitrue"+contact.getName());
                             init(contact.getName(),contact.getPhone());
-
                         }
                         cursor.close();
                     }

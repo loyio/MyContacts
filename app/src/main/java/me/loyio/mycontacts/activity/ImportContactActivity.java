@@ -1,9 +1,16 @@
 package me.loyio.mycontacts.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.view.ContextMenu;
@@ -33,9 +40,30 @@ public class ImportContactActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_import_contact);
         mImportLv=findViewById(R.id.importLv);
+
+        // Menu and Data
+        registerForContextMenu(mImportLv);
         initData();
         initView();
-        registerForContextMenu(mImportLv);
+    }
+
+    private void initView() {
+        ThreadUtils.runInUIThread(new Runnable() {
+            @Override
+            public void run() {
+                mMyAdapter = new MyAdapter(ImportContactActivity.this,mContactList);
+                mImportLv.setAdapter(mMyAdapter);
+            }
+        });
+    }
+
+    private void initData() {
+        if (ContextCompat.checkSelfPermission(ImportContactActivity.this, Manifest.permission.READ_CONTACTS)!=
+                PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(ImportContactActivity.this,new String[]{Manifest.permission.READ_CONTACTS},1);
+        }else{
+            importContact();
+        }
     }
 
     @Override
@@ -44,122 +72,115 @@ public class ImportContactActivity extends AppCompatActivity {
         menu.setHeaderTitle("导入联系人操作");
         menu.add(0, Menu.FIRST,0,"全部选择");
         menu.add(0, Menu.FIRST+1,1,"取消选择");
-        menu.add(0, Menu.FIRST+2,1,"确定导入");
+        menu.add(0, Menu.FIRST+2,1,"确认导出");
     }
-
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         switch (item.getItemId()){
-            case Menu.FIRST:selectAll();break;
-            case Menu.FIRST+1:unSelectAll();break;
-            case Menu.FIRST+2:importContact();break;
+            case Menu.FIRST:
+                selectAll();
+                break;
+            case Menu.FIRST + 1:
+                unSelectAll();
+                break;
+            case Menu.FIRST + 2:
+                writeContact();
+                finish();
         }
         return super.onContextItemSelected(item);
     }
 
     private void selectAll() {
-        for (Contact contact:mContactList) {
-            contact.setChecked(true);
-        }
-        initView();
-    }
-
-    private void unSelectAll() {
-        for (Contact contact:mContactList) {
-            contact.setChecked(false);
-        }
-        initView();
-    }
-
-    private void importContact() {
-        ThreadUtils.runInThread(new Runnable() {
+        ThreadUtils.runInUIThread(new Runnable() {
             @Override
             public void run() {
-                int count=0;
-                for (Contact contact:mContactList) {
-                    if (contact.getChecked()==true){
-                        Cursor cursor=getContentResolver().query(ContactProvider.URI_CONTACT,
-                                null,
-                                "name=?",
-                                new String[]{contact.getName()},
-                                null);
-                        if (!cursor.moveToNext()){
-                            ContentValues cv=new ContentValues();
-                            cv.put(ContactOpenHelper.ContactTable.NAME,contact.getName());
-                            cv.put(ContactOpenHelper.ContactTable.PHONE,contact.getPhone());
-                            cv.put(ContactOpenHelper.ContactTable.EMAIL,contact.getEmail());
-                            cv.put(ContactOpenHelper.ContactTable.QQ,contact.getQq());
-                            getContentResolver().insert(ContactProvider.URI_CONTACT,cv);
-                            count++;
-                        }else ToastUtils.showToastSafe(ImportContactActivity.this,"该联系人已存在！");
-                        cursor.close();
-                    }
+                for (Contact c:mContactList) {
+                    c.setChecked(true);
                 }
-                ToastUtils.showToastSafe(ImportContactActivity.this,"已导入"+count+"个联系人！");
-                finish();
+                initView();
             }
         });
     }
 
+    private void unSelectAll() {
+        ThreadUtils.runInUIThread(new Runnable() {
+            @Override
+            public void run() {
+                for (Contact c:mContactList) {
+                    c.setChecked(false);
+                }
+                initView();
+            }
+        });
+    }
 
-    private void initData() {
+    private void writeContact() {
         ThreadUtils.runInThread(new Runnable() {
             @Override
             public void run() {
-                //查找联系人的数据
+                int count = 0;
+                for (Contact contact :mContactList) {
+                    if (contact.getChecked() == true){
+                        Cursor cursor = getContentResolver().query(ContactProvider.URI_CONTACT,null,"name=?",new String[]{contact.getName()},null);
+                        if (cursor.getCount() == 0){
+                            ContentValues cv = new ContentValues();
+                            cv.put("name",contact.getName());
+                            cv.put("phone",contact.getPhone());
+                            cv.put("email",contact.getEmail());
+                            cv.put("qq", contact.getQq());
+                            getContentResolver().insert(ContactProvider.URI_CONTACT,cv);
+                            count++;
+                        }else{
+                            ToastUtils.showToastSafe(ImportContactActivity.this,contact.getName()+"已存在！");
+                        }
+                        cursor.close();
+                    }
+                }
+                ToastUtils.showToastSafe(ImportContactActivity.this,"已导入"+count+"个联系人！");
+            }
+        });
+    }
+
+    private void importContact() {
+        ThreadUtils.runInUIThread(new Runnable() {
+            @Override
+            public void run() {
                 Cursor cursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
-                // 遍历查询结果，获取系统中所有联系人
+                // Get The Contacts in My Mobile Phone
                 while (cursor.moveToNext()) {
-                    //获取联系人ID
                     String contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-                    //获取联系人名字
+
+                    // Name
                     String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                    //使用ContentResolver查找联系人的电话号码
+
+                    // The First Number
                     Cursor phones = getContentResolver().query(
                             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                             null,
                             ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + contactId,
                             null,
                             null);
-
-                    //只获取第一个电话号码
                     String phoneNumber = "";
                     if (phones.moveToFirst())
                         phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    //关闭phone记录集
                     phones.close();
-                    //使用ContentResolver查找联系人的email
+
+                    // The First Email Address
                     Cursor emails = getContentResolver().query(
                             ContactsContract.CommonDataKinds.Email.CONTENT_URI,
                             null,
                             ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = " + contactId,
                             null, null);
-                    //只获取第一个email
                     String emailAddress = "";
                     if (emails.moveToFirst())
                         emailAddress = emails.getString(emails.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
-                    //关闭emails记录集
                     emails.close();
-                    //创建一个联系人对象
-                    Contact contact = new Contact(name, phoneNumber, emailAddress, false);
-                    //将contact加入到contacts集合中
+
+                    // Create the Contact
+                    Contact contact = new Contact(name, phoneNumber, emailAddress, null, false);
                     mContactList.add(contact);
                 }
                 cursor.close();
-            }
-        });
-    }
-
-
-    private void initView() {
-        ThreadUtils.runInUIThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mMyAdapter!=null){
-                    mMyAdapter=null;
-                }
-                mMyAdapter=new MyAdapter(ImportContactActivity.this,mContactList);
-                mImportLv.setAdapter(mMyAdapter);
             }
         });
     }

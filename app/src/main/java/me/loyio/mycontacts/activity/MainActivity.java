@@ -26,6 +26,11 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
 
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
@@ -116,8 +121,6 @@ public class MainActivity extends AppCompatActivity {
                         phoneTv.setText(cursor.getString(2));
                         emailTv.setText(cursor.getString(3));
                         qqTv.setText(cursor.getString(4));
-
-
                     }
                 };
                 mMainLv.setAdapter(mCursorAdapter);
@@ -128,19 +131,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         L.d("onCreateOptionsMenu start");
-        menu.add(1, Menu.FIRST, 1, "新建联系人").setIcon(R.drawable.new_contact);
-        menu.add(1, Menu.FIRST + 1, 2, "查找联系人").setIcon(R.drawable.search_contact);
-        menu.add(1, Menu.FIRST + 2, 3, "导入联系人").setIcon(R.drawable.import_contact);
-        menu.add(1, Menu.FIRST + 3, 4, "导出联系人").setIcon(R.drawable.export_contact);
-        menu.add(1, Menu.FIRST + 4, 5, "修改密码").setIcon(R.drawable.modify_password);
+        menu.add(1, Menu.FIRST, 1, "新建联系人").setIcon(resizeImage(R.drawable.contact_add, 150, 150));
+        menu.add(1, Menu.FIRST + 1, 2, "查找联系人").setIcon(resizeImage(R.drawable.contact_search, 150, 150));
+        menu.add(1, Menu.FIRST + 2, 3, "导入联系人").setIcon(resizeImage(R.drawable.contact_import, 150, 150));
+        menu.add(1, Menu.FIRST + 3, 4, "导出联系人").setIcon(resizeImage(R.drawable.contact_export, 150, 150));
+        menu.add(1, Menu.FIRST + 4, 5, "修改密码").setIcon(resizeImage(R.drawable.contact_my, 150, 150));
         return super.onCreateOptionsMenu(menu);
     }
 
-    /**
-     * 菜单栏监听函数
-     * @param item
-     * @return
-     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -195,14 +193,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void searchContact() {
         final EditText inputNameTv = new EditText(MainActivity.this);
-        //组件之一提示对话框AlertDialog.Builder
         AlertDialog.Builder inputDialog = new AlertDialog.Builder(MainActivity.this);
-        inputDialog.setTitle("请输入要输入的姓名")
+        inputDialog.setTitle("请输入要查找联系人的姓名")
                 .setView(inputNameTv)
                 .setPositiveButton("查找", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        //trim（）方法会去除输入的空格
                         searchResultShow(inputNameTv.getText().toString().trim());
                     }
                 }).show();
@@ -258,13 +254,6 @@ public class MainActivity extends AppCompatActivity {
         menu.add(Menu.NONE, Menu.FIRST + 5, 6, "显示全部");
     }
 
-    /**当你选择上下文菜单会触发这个事件
-     * 创建上下文菜单第二步
-     * 覆写onContextItemSelected方法
-     * 响应上下文菜单菜单项的点击事件
-     * @param item
-     * @return
-     */
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -309,20 +298,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void dial() {
-        Intent intent = new Intent(Intent.ACTION_CALL);
-        intent.setData(Uri.parse("tel:"+mcurrentCursor.getString(2)));
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
+        if (checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.CALL_PHONE},1);
+        }else{
+            Intent intent = new Intent(Intent.ACTION_CALL);
+            Uri uri = Uri.parse("tel:" + mcurrentCursor.getString(2));
+            intent.setData(uri);
+            startActivity(intent);
         }
-        startActivity(intent);
-        L.d(mcurrentCursor.getString(2).trim());
 
     }
 
@@ -343,20 +326,15 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    /**为了解决图片不显示的问题，利用反射机制显示
+    /**
+     * Display Images using reflection mechanism
      */
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
         if  (menu!=null)
             if (menu.getClass().getSimpleName().equalsIgnoreCase("MenuBuilder")){
                 try {
-                    /**getDeclaredMethod：返回方法对象；
-                     invoke：简单理解就是在不知道对象的前提下，通过配置的参数来调用方法
-                     */
                     Method method=menu.getClass().getDeclaredMethod("setOptionalIconsVisible",Boolean.TYPE);
-                    /**如果方法是 private修饰的，当你用反射去访问的时候
-                     setAccessible(true); 之后 才能访问
-                     */
                     method.setAccessible(true);
                     method.invoke(menu,true);
                 } catch (IllegalAccessException e) {
@@ -371,9 +349,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     *定义一个内容观察者，来监听数据库
-     *目的是观察(捕捉)特定Uri引起的数据库的变化，继而做一些相应的处理
-     * 它类似于数据库技术中的触发器(Trigger)，当ContentObserver所观察的Uri发生变化时，便会触发它。
+     * Listen to the database, Like the Trigger
      */
     class MyContentObserver extends ContentObserver {
 
@@ -389,9 +365,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     *  public final void registerContentObserver(Uri uri, boolean notifyForDescendents, ContentObserver observer)
-     *  功能：为指定的Uri注册一个ContentObserver派生类实例，当给定的Uri发生改变时，回调该实例对象去处理。
-     *  参数：uri 需要观察的Uri(需要在UriMatcher里注册，否则该Uri也没有意义了)
+     *  Register a ContentObserver-derived class instance for the specified Uri, and when the given Uri changes, the instance object will be called back for processing.
      */
     private void registerContentObserver(){
         L.d("registerContentObserver start");
@@ -401,12 +375,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     *public final void  unregisterContentObserver(ContentObserver observer)
-     *功能：取消对给定Uri的观察
-     * 参数： observer ContentObserver的派生类实例
+     * Cancel the observation of a given Uri
      */
     private void unRegistContentObserver(){
         L.d("unregisterContentObserver start");
         getContentResolver().unregisterContentObserver(mMyContentObserver);
+    }
+
+    private Drawable resizeImage(int resId, int w, int h) {
+        // load the origial Bitmap
+        Bitmap BitmapOrg = BitmapFactory.decodeResource(getResources(), resId);
+        int width = BitmapOrg.getWidth();
+        int height = BitmapOrg.getHeight();
+        int newWidth = w;
+        int newHeight = h;
+        // calculate the scale
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        // create a matrix for the manipulation
+        Matrix matrix = new Matrix();
+        matrix.postScale(scaleWidth, scaleHeight);
+        Bitmap resizedBitmap = Bitmap.createBitmap(BitmapOrg, 0, 0,width, height, matrix, true);
+        return new BitmapDrawable(resizedBitmap);
     }
 }

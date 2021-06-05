@@ -23,7 +23,7 @@
         android:id="@+id/tvWelcome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="欢迎使用联系人Lite!"
+        android:text="欢迎使用通讯录Lite!"
         android:textColor="@color/black"
         android:textSize="20sp"
         android:textStyle="bold"

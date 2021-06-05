@@ -31,12 +31,18 @@ public class RegisterActivity extends AppCompatActivity {
         mregisteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferences.Editor editor=getSharedPreferences("data",MODE_PRIVATE).edit();
-                editor.putString("name",registeNameText.getText().toString().trim());
-                editor.putString("password",registePasswordText.getText().toString().trim());
-                editor.apply();
-                Toast.makeText(RegisterActivity.this,"已存储",Toast.LENGTH_LONG).show();
-                finish();
+                String account = registeNameText.getText().toString().trim();
+                String password = registePasswordText.getText().toString().trim();
+                if(account.equals("") || password.equals("")){
+                    Toast.makeText(RegisterActivity.this,"账号或密码不能为空",Toast.LENGTH_SHORT).show();
+                }else{
+                    SharedPreferences.Editor editor=getSharedPreferences("data",MODE_PRIVATE).edit();
+                    editor.putString("account",account);
+                    editor.putString("password",password);
+                    editor.apply();
+                    Toast.makeText(RegisterActivity.this,"已存储",Toast.LENGTH_LONG).show();
+                    finish();
+                }
             }
         });
 
